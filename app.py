@@ -5,12 +5,12 @@ import numpy as np
 # 1. Configuración de la página
 st.set_page_config(page_title="Evaluación Nutricional OMS", layout="centered")
 
-# 2. Cargar los datos con la codificación correcta
+# 2. Cargar los datos con nombres cortos y codificación correcta
 @st.cache_data
 def load_data():
-    # Se utilizan los nombres exactos de tus archivos y codificación latin-1
-    df_boys = pd.read_csv("wfl_boys_0-to-2-years_zscores.xlsx - wfl_boys_0 to 2 years_zscores.csv", encoding="latin-1")
-    df_girls = pd.read_csv("wfl_girls_0-to-2-years_zscores.xlsx - wfl_girls_0 to 2 years_zscores.csv", encoding="latin-1")
+    # Usamos los nombres simplificados
+    df_boys = pd.read_csv("wfl_boys.csv", encoding="latin-1")
+    df_girls = pd.read_csv("wfl_girls.csv", encoding="latin-1")
     return df_boys, df_girls
 
 # Función para redondear la talla al 0.5 cm más cercano
