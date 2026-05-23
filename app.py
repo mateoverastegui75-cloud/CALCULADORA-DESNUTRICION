@@ -5,12 +5,12 @@ import numpy as np
 # 1. Configuración de la página
 st.set_page_config(page_title="Evaluación Nutricional OMS", layout="centered")
 
-# 2. Cargar los datos con nombres cortos y codificación correcta
+# 2. Cargar los datos con autodetector de formato
 @st.cache_data
 def load_data():
-    # Usamos los nombres simplificados
-    df_boys = pd.read_csv("wfl_boys.csv", encoding="latin-1")
-    df_girls = pd.read_csv("wfl_girls.csv", encoding="latin-1")
+    # sep=None y engine='python' fuerzan a Pandas a descubrir automáticamente si el archivo usa comas, puntos y comas o tabulaciones.
+    df_boys = pd.read_csv("wfl_boys.csv", sep=None, engine="python", encoding="latin-1")
+    df_girls = pd.read_csv("wfl_girls.csv", sep=None, engine="python", encoding="latin-1")
     return df_boys, df_girls
 
 # Función para redondear la talla al 0.5 cm más cercano
