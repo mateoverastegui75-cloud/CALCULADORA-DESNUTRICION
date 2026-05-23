@@ -2,77 +2,65 @@ import streamlit as st
 import pandas as pd
 import numpy as np
 
-# 1. Configuración de la página
 st.set_page_config(page_title="Evaluación Nutricional OMS", layout="centered")
 
-# 2. Cargar los datos con autodetector de formato
 @st.cache_data
 def load_data():
-    # sep=None y engine='python' fuerzan a Pandas a descubrir automáticamente si el archivo usa comas, puntos y comas o tabulaciones.
-    df_boys = pd.read_csv("wfl_boys.csv", sep=None, engine="python", encoding="latin-1")
-    df_girls = pd.read_csv("wfl_girls.csv", sep=None, engine="python", encoding="latin-1")
+    # El parámetro on_bad_lines="skip" evita que la app se caiga si hay un error de formato
+    df_boys = pd.read_csv("wfl_boys.csv", encoding="latin-1", on_bad_lines="skip")
+    df_girls = pd.read_csv("wfl_girls.csv", encoding="latin-1", on_bad_lines="skip")
     return df_boys, df_girls
 
-# Función para redondear la talla al 0.5 cm más cercano
 def round_to_nearest_half(number):
     return round(number * 2) / 2
 
-# 3. Interfaz de Usuario
 st.title("Calculadora de Desnutrición (Peso/Longitud)")
 st.markdown("Basado en los patrones de crecimiento de la OMS para **menores de 2 años**.")
 
 df_boys, df_girls = load_data()
 
-# Formularios de entrada
 sexo = st.radio("Seleccione el sexo del paciente:", ("Niño", "Niña"))
 talla_cm = st.number_input("Ingrese la talla/longitud en cm (ej. 72.3):", min_value=45.0, max_value=110.0, value=70.0, step=0.1)
-peso_g = st.number_input("Ingrese el peso exacto en GRAMOS (ej. 8500):", min_value=1000.0, max_value=30000.0, value=8500.0, step=50.0)
+peso_g = st.number_input("Ingrese el peso exacto en GRAMOS (ej. 8500 para 8.5 kg):", min_value=1000.0, max_value=30000.0, value=8500.0, step=50.0)
 
 if st.button("Calcular Evaluación"):
-    # Conversión de gramos a kilogramos
     peso_kg = peso_g / 1000.0
     talla_ajustada = round_to_nearest_half(talla_cm)
     
-    # Seleccionar dataset según sexo
     df = df_boys if sexo == "Niño" else df_girls
     
-    # Validación de rango de talla en la tabla
     if talla_ajustada < df['Length'].min() or talla_ajustada > df['Length'].max():
         st.error(f"La talla ajustada ({talla_ajustada} cm) está fuera del rango de las tablas para menores de 2 años.")
     else:
-        # Extraer variables LMS de la tabla para la talla correspondiente
         row = df[df['Length'] == talla_ajustada].iloc[0]
         L = row['L']
-        M = row['M']  # Mediana (Peso ideal)
+        M = row['M']  
         S = row['S']
         
-        # Calcular Z-score exacto usando la fórmula LMS de la OMS
         if L != 0:
             z_score = (((peso_kg / M) ** L) - 1) / (S * L)
         else:
             z_score = np.log(peso_kg / M) / S
             
-        # Clasificación del estado nutricional según el Z-score
         if z_score <= -3:
             estado = "Desnutrición Aguda Severa (≤ -3 SD)"
-            color = "#D32F2F"  # Rojo
+            color = "#D32F2F"  
         elif -3 < z_score <= -2:
             estado = "Desnutrición Aguda Moderada (entre -3 y -2 SD)"
-            color = "#F57C00"  # Naranja
+            color = "#F57C00"  
         elif -2 < z_score <= 1:
             estado = "Peso Normal"
-            color = "#388E3C"  # Verde
+            color = "#388E3C"  
         elif 1 < z_score <= 2:
             estado = "Riesgo de Sobrepeso (entre +1 y +2 SD)"
-            color = "#FBC02D"  # Amarillo
+            color = "#FBC02D"  
         elif 2 < z_score <= 3:
             estado = "Sobrepeso (entre +2 y +3 SD)"
-            color = "#F57C00"  # Naranja
+            color = "#F57C00"  
         else:
             estado = "Obesidad (> +3 SD)"
-            color = "#D32F2F"  # Rojo
+            color = "#D32F2F"  
             
-        # Lógica de proximidad para el rango de desnutrición
         proximidad = ""
         if -3 < z_score < -2:
             if z_score < -2.5:
@@ -80,7 +68,6 @@ if st.button("Calcular Evaluación"):
             else:
                 proximidad = f"ℹ️ *Nota:* El valor está entre -2 y -3, tendiendo a acercarse a **-2 SD** ({z_score:.2f})."
         
-        # Mostrar Resultados en la interfaz
         st.divider()
         st.subheader("Resultados de la Evaluación")
         
